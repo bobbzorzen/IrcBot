@@ -7,7 +7,7 @@ include_once('/home/pi/pear/share/pear/Net/SmartIRC.php');
 
  
 
-class mybot {
+class Bot {
     function handleCommands(&$irc, &$data) {
         /**
          * @var string The command recived
@@ -213,7 +213,7 @@ class mybot {
 
  
 
-$bot = &new mybot();
+$bot = &new Bot();
 
 $irc = &new Net_SmartIRC();
 
