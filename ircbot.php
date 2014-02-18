@@ -1,7 +1,8 @@
 <?php
 require_once("phpbotdefines.php");
 $trustedUsers = array("Bobbzorzen");
-$channels = array("#wip"); //array('#bobbzorzen','#kungsmarken')
+$channels = array("#bobbzorzen"); //array('#bobbzorzen','#kungsmarken')
+$prefix = NICK.": ";
 
 include_once('/home/pi/pear/share/pear/Net/SmartIRC.php');
 
@@ -12,9 +13,16 @@ class Bot {
         /**
          * @var string The command recived
          */
-        $command = substr($data->messageex[0], 1);
+        global $prefix;
+        $msgNoPrefix = substr($data->message, strlen($prefix));
+        $splitMsg = explode(" ", $msgNoPrefix);
+        $command = $splitMsg[0];
 
         $message = '';
+        $this->debug(count($prefix));
+        $this->debug($msgNoPrefix);
+        $this->debug($splitMsg);
+        $this->debug($command);
         
         /**
          * Sends a command confirmation to the channel notifying that command was recived.
@@ -25,7 +33,7 @@ class Bot {
             global $trustedUsers;
             if(in_array($data->nick, $trustedUsers)) {
                 //check if channel is suplied and is of the correct format
-                $channel = ((count($data->messageex) == 2) && (substr($data->messageex[1],0,1) == "#")) ? $data->messageex[1] : false;
+                $channel = (isset($splitMsg[1]) && (substr($splitMsg[1],0,1) == "#")) ? $splitMsg[1] : false;
 
                 //if channel is correct then join and print feedback message. If not then print error message
                 if($channel != false) {
@@ -43,7 +51,7 @@ class Bot {
 
         if($command == 'slap') {
             //Check if slapee was suplied
-            $slapee = ((count($data->messageex) == 2)) ? $data->messageex[1] : false;
+            $slapee = (isset($splitMsg[1])) ? $splitMsg[1] : false;
 
             //If slapee is valid
             if($slapee != false) {
@@ -65,8 +73,8 @@ class Bot {
 
         if($command == 'coc') {
             $message = "";
-            if(isset($data->messageex[1])) {
-                $id = $data->messageex[1];
+            if(isset($splitMsg[1])) {
+                $id = $splitMsg[1];
                 $url = "http://dbwebb.se/coc/?id=$id";
                 // create curl resource 
                 $ch = curl_init(); 
@@ -89,7 +97,7 @@ class Bot {
                     $message = "Invalid coc id";
                 }
             } else {
-                $message = "Wrong format! Correct format: !coc <cocId>";
+                $message = "Wrong format! Correct format: ". $prefix ."coc <cocId>";
             }
             $this->channelMessage($irc, $data->channel, $message);
         }
@@ -221,7 +229,7 @@ $irc->setDebug(SMARTIRC_DEBUG_ALL);
 
 $irc->setUseSockets(TRUE);
 
-$irc->registerActionhandler(SMARTIRC_TYPE_CHANNEL, '^!', $bot, 'handleCommands');
+$irc->registerActionhandler(SMARTIRC_TYPE_CHANNEL, '^'.$prefix, $bot, 'handleCommands');
 $irc->registerActionhandler(SMARTIRC_TYPE_CHANNEL, '^.*youtube.com\/watch\?v.*$', $bot, 'youtubeLister');
 $irc->registerActionhandler(SMARTIRC_TYPE_CHANNEL, '^.*youtu.be\/.*$', $bot, 'youtubeLister');
 $irc->registerActionhandler(SMARTIRC_TYPE_JOIN, '.*', $bot, 'welcomeMessage');
