@@ -1,5 +1,5 @@
 <?php
-require_once("../../phpbotdefines.php");
+require_once("phpbotdefines.php");
 $trustedUsers = array("Bobbzorzen");
 $channels = array("#wip"); //array('#bobbzorzen','#kungsmarken')
 
@@ -93,10 +93,21 @@ class mybot {
             }
             $this->channelMessage($irc, $data->channel, $message);
         }
+
+        if($command == 'github') {
+            $message = "My insides are on display here: https://github.com/bobbzorzen/IrcBot";
+            $this->channelMessage($irc,$data->channel, $message);
+        }
     }
 
+
     function youtubeLister(&$irc, &$data) {
-        $regex = "/.*\?v=(.{11}).*/";
+        $regex = "";
+        if(preg_match("/youtu.be\/.{11}/", $data->message)) {
+            $regex = "/youtu.be\/(.{11})/";
+        } else {
+            $regex = "/.*\?v=(.{11}).*/";
+        }
         $id = preg_replace($regex,"$1",$data->message);
         $url = "https://www.googleapis.com/youtube/v3/videos?id=$id&key=". API ."&part=snippet";
         // create curl resource 
@@ -116,13 +127,13 @@ class mybot {
         $jsonOutput = json_decode($output);
 
         $this->debug($data->message);
-        $this->debug($message);
+        $this->debug($id);
         $this->debug($url);
         $this->debug($jsonOutput);
 
         $sender = $data->nick;
         $title = $jsonOutput->items[0]->snippet->title;
-        $message = "Yotube video: \"$title\" linked by: $sender";
+        $message = "Yotube video: \"$title\"";
         $this->channelMessage($irc, $data->channel, $message);
     }
 
@@ -212,6 +223,7 @@ $irc->setUseSockets(TRUE);
 
 $irc->registerActionhandler(SMARTIRC_TYPE_CHANNEL, '^!', $bot, 'handleCommands');
 $irc->registerActionhandler(SMARTIRC_TYPE_CHANNEL, '^.*youtube.com\/watch\?v.*$', $bot, 'youtubeLister');
+$irc->registerActionhandler(SMARTIRC_TYPE_CHANNEL, '^.*youtu.be\/.*$', $bot, 'youtubeLister');
 $irc->registerActionhandler(SMARTIRC_TYPE_JOIN, '.*', $bot, 'welcomeMessage');
 
 $irc->connect(SERVER, 6667);
