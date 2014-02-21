@@ -49,9 +49,11 @@ Other functionality
 Example phpbotdefines.php
 ---
 
-```<?php
+```
+<?php
 define(NICK, 'YourBotNick');
 define(PASS, 'YourPasswordHere');
 define(SERVER, 'YourIrcServerHere');
 define(API, 'YourYoutubeAPI');
 ?>
+```
