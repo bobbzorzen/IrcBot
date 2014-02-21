@@ -54,4 +54,4 @@ define(NICK, 'YourBotNick');
 define(PASS, 'YourPasswordHere');
 define(SERVER, 'YourIrcServerHere');
 define(API, 'YourYoutubeAPI');
-?>```
+?>
