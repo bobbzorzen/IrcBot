@@ -43,3 +43,17 @@ Other functionality
 2. **welcome message**
 
  Prints a welcome message to any who joins the channel.
+
+
+
+Example phpbotdefines.php
+---
+
+```
+<?php
+define(NICK, 'YourBotNick');
+define(PASS, 'YourPasswordHere');
+define(SERVER, 'YourIrcServerHere');
+define(API, 'YourYoutubeAPI');
+?>
+```
