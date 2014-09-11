@@ -1,7 +1,7 @@
 <?php
 require_once("phpbotdefines.php");
-$trustedUsers = array("Bobbzorzen");
-$channels = array("#bobbzorzen"); //array('#bobbzorzen','#kungsmarken')
+$trustedUsers = array("Bobbzorzen","wasa");
+$channels = array('#bobbzorzen','#kungsmarken'); //array("#wip"); 
 $prefix = NICK.": ";
 
 include_once('/home/pi/pear/share/pear/Net/SmartIRC.php');
@@ -23,13 +23,35 @@ class Bot {
         $this->debug($msgNoPrefix);
         $this->debug($splitMsg);
         $this->debug($command);
+
+        $this->commands = [
+            'help'  => 'Prints all commands, purpose and usage. USAGE: '. $prefix .'help [<command>]',
+            'join'  => 'Makes '. NICK .' join a channel. Can only be executed by a trusted user. USAGE: '. $prefix .'join <channel>',
+            'part'  => 'Makes '. NICK .' part from the current channel. Can only be executed by a trusted user. USAGE: '. $prefix .'part',
+            'slap'  => 'Makes '. NICK .' slap another user. USAGE: '. $prefix .'slap <user>',
+            'coc'   => 'Prints a Code Of Conduct. USAGE: '. $prefix .'coc <id>',
+            'github'=> 'Links to the git-repo of this bot. USAGE: '. $prefix .'github',
+            ];
         
         /**
          * Sends a command confirmation to the channel notifying that command was recived.
          */
         //$this->channelMessage($irc, $data->channel, "I recived the command: $command, from: ".$data->nick);
 
-        if($command == 'join') {
+        if($command == 'help' || $command == 'info') {
+            $cmd = (isset($splitMsg[1])) ? strtolower($splitMsg[1]) : 'all';
+            if($cmd == 'all' || !isset($this->commands[$cmd])) {
+                foreach($this->commands as $key => $value) {
+                    $message = $value;
+                    $this->channelMessage($irc, $data->channel, $message);
+                }
+            }
+            else {
+                $message = $this->commands[$cmd];
+                $this->channelMessage($irc, $data->channel, $message);
+            }
+        }
+        elseif($command == 'join') {
             global $trustedUsers;
             if(in_array($data->nick, $trustedUsers)) {
                 //check if channel is suplied and is of the correct format
@@ -47,31 +69,36 @@ class Bot {
             }
             $this->channelMessage($irc, $data->channel, $message);
         }
-            
-
-        if($command == 'slap') {
+        elseif($command == 'slap') {
+            global $trustedUsers;
             //Check if slapee was suplied
             $slapee = (isset($splitMsg[1])) ? $splitMsg[1] : false;
 
             //If slapee is valid
             if($slapee != false) {
+                if(in_array($slapee, $trustedUsers)) {
+                    $slapee = $data->nick;
+                }
                 //$message = $data->nick .' slaps '. $slapee .' with a moist cod!';
                 //$this->channelMessage($irc, $data->channel, $message);
                 $this->performAction($irc, $data->channel, "Slaps $slapee with a moist cod!");
             }
         }
-            
-        if($command == 'part') {
-            $this->channelMessage($irc, $data->channel, "KTHXBYE!");
-            $irc->part(array($data->channel),"I do as i'm asked!");
-        }
+        elseif($command == 'part') {
 
-        if($command == 'opall') {
+            global $trustedUsers;
+            if(in_array($data->nick, $trustedUsers)) {
+                $this->channelMessage($irc, $data->channel, "KTHXBYE!");
+                $irc->part(array($data->channel),"I do as i'm asked!");
+            } else {
+                $this->channelMessage($irc, $data->channel, "You aren't one of the trusted few! Begone foul beast!");
+            }
+        }
+        elseif($command == 'opall') {
             $message = "op all";
             $this->privateMessage($irc,'chan', $message);
         }
-
-        if($command == 'coc') {
+        elseif($command == 'coc') {
             $message = "";
             if(isset($splitMsg[1])) {
                 $id = $splitMsg[1];
@@ -101,9 +128,12 @@ class Bot {
             }
             $this->channelMessage($irc, $data->channel, $message);
         }
-
-        if($command == 'github') {
+        elseif($command == 'github') {
             $message = "My insides are on display here: https://github.com/bobbzorzen/IrcBot";
+            $this->channelMessage($irc,$data->channel, $message);
+        }
+        else{
+            $message = "Unknown command, try help";
             $this->channelMessage($irc,$data->channel, $message);
         }
     }
@@ -171,9 +201,11 @@ class Bot {
      * 
      */
     function debug($data) {
-        echo "\n\n=====================================================\n";
-        print_r($data);
-        echo "\n=====================================================\n\n";
+        if(DEBUG){
+            echo "\n\n=====================================================\n";
+            print_r($data);
+            echo "\n=====================================================\n\n";
+        }
     }
 
  
